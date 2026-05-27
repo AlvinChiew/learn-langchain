@@ -1,5 +1,7 @@
 # Notes
 
+To quickstart a demo, host AI Agent via `langgraph dev` then use [Agent Chat UI](https://agentchat.vercel.app/) to interact. Customizable with on [GitHub Repo](https://github.com/langchain-ai/agent-chat-ui) too.
+
 ## model parameters
 
 - temperature - [0-1] - [deterministic, creative]
@@ -102,7 +104,7 @@ def user_language_prompt(request: ModelRequest) -> str:
   return f"{base_prompt} only respond in {user_language}."
 
 @wrap_model_call
-def state_based_model(request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]) -> ModelResponse:
+async def state_based_model(request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]) -> ModelResponse:
   """Select model based on State conversation length."""
   message_count = len(request.messages)
   if message_count > 10:
@@ -110,10 +112,10 @@ def state_based_model(request: ModelRequest, handler: Callable[[ModelRequest], M
   else:
     model = standard_model
   request = request.override(model=model)
-  return handler(request)
+  return await handler(request)
 
 @wrap_model_call
-def role_based_tool_set(request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]) -> ModelResponse:
+async def role_based_tool_set(request: ModelRequest, handler: Callable[[ModelRequest], ModelResponse]) -> ModelResponse:
   """Dynamically call tools based on the runtime context"""
   user_role = request.runtime.context.user_role
   if user_role == "internal":
@@ -121,7 +123,7 @@ def role_based_tool_set(request: ModelRequest, handler: Callable[[ModelRequest],
   else:
     tools = [read_favorite_city] # external users only get access to web search
     request = request.override(tools=tools)
-  return handler(request)
+  return await handler(request)
 
 
 summarizer = SummarizationMiddleware(
